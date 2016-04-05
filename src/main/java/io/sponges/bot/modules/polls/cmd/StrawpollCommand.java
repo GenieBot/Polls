@@ -31,7 +31,7 @@ public class StrawpollCommand extends Command {
         if (args.length == 0) {
             request.reply("Usage:" +
                     "\nstrawpoll view [id] - shows results for the poll (you find the id at the end of the URL)" +
-                    "\nstrawpoll create - makes a new poll");
+                    "\nstrawpoll create - makes a new poll using the poll builder");
             return;
         }
         User user = request.getUser();

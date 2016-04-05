@@ -9,7 +9,7 @@ import io.sponges.bot.modules.polls.cmd.StrawpollCommand;
 public class Polls extends Module {
 
     public Polls() {
-        super("Polls", "1.01");
+        super("Polls", "1.02");
     }
 
     @Override
