@@ -74,9 +74,9 @@ public class StrawpollCommand extends Command {
                     request.reply("You are already in the process of creating a poll! To exit this, say \"exit\".");
                     return;
                 }
-                StrawpollBuilder builder = new StrawpollBuilder(id + new Random().nextInt(3) + 1);
+                StrawpollBuilder builder = new StrawpollBuilder();
                 creating.put(userId, builder);
-                request.reply("Created a new poll with the id \"" + id + "\". You are now in the poll builder. " +
+                request.reply("Created a new poll. You are now in the poll builder. " +
                         "Say \"exit\" to cancel the poll creation at any time." +
                         "\n>> What should the topic of the poll (the title) be?");
                 break;
@@ -172,6 +172,7 @@ public class StrawpollCommand extends Command {
                     return;
                 }
                 builder.setIsCaptcha(captcha);
+                creating.remove(userId);
                 Strawpoll strawpoll;
                 try {
                     strawpoll = builder.create();
@@ -180,8 +181,11 @@ public class StrawpollCommand extends Command {
                     channel.sendChatMessage("Could not create the poll! " + e.getMessage());
                     return;
                 }
-                creating.remove(userId);
-                channel.sendChatMessage("Poll created! " + strawpoll.getUrl());
+                if (strawpoll.getId() == -1) {
+                    channel.sendChatMessage("Could not create the poll! Make sure you setup the poll correctly.");
+                    return;
+                }
+                channel.sendChatMessage("Poll created with id \"" + strawpoll.getId() + "\": " + strawpoll.getUrl());
                 break;
             }
         }
@@ -233,20 +237,9 @@ public class StrawpollCommand extends Command {
 
 } class Strawpoll {
 
-    private final String title;
-    private final List<String> options;
-    private final boolean multi, captcha;
-    private final String duplicateCheck;
-
-    private int id = 0;
+    private int id = -1;
 
     public Strawpoll(String title, List<String> options, boolean multi, boolean captcha, String duplicateCheck) throws IOException {
-        this.title = title;
-        this.options = options;
-        this.multi = multi;
-        this.captcha = captcha;
-        this.duplicateCheck = duplicateCheck;
-
         JSONObject json = new JSONObject()
                 .put("title", StringEscapeUtils.unescapeJson(title))
                 .put("options", options)
@@ -279,13 +272,15 @@ public class StrawpollCommand extends Command {
         this.id = new JSONObject(response.toString()).getInt("id");
     }
 
+    public int getId() {
+        return id;
+    }
+
     public String getUrl() {
         return "http://strawpoll.me/" + id;
     }
 
 } class StrawpollBuilder {
-
-    private final int id;
 
     private String title;
     private List<String> options = new ArrayList<>();
@@ -294,17 +289,12 @@ public class StrawpollCommand extends Command {
 
     private SetupStage setupStage;
 
-    StrawpollBuilder(int id) {
-        this.id = id;
+    StrawpollBuilder() {
         this.setupStage = SetupStage.TITLE;
     }
 
     public Strawpoll create() throws IOException {
         return new Strawpoll(title, options, isMulti, isCaptcha, "normal");
-    }
-
-    public int getId() {
-        return id;
     }
 
     public void setTitle(String title) {
