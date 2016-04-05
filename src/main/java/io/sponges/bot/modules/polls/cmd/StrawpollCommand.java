@@ -22,8 +22,6 @@ public class StrawpollCommand extends Command {
 
     private final Map<String, StrawpollBuilder> creating = new ConcurrentHashMap<>();
 
-    private volatile int id = 0;
-
     public StrawpollCommand() {
         super("create and view the results of strawpoll.me polls", "strawpoll", "strawpoll.me", "strawvote", "spoll");
     }
