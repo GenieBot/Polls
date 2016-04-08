@@ -34,6 +34,7 @@ public class StrawpollCommand extends Command {
                     "\nstrawpoll create - makes a new poll using the poll builder");
             return;
         }
+        Channel channel = request.getChannel();
         User user = request.getUser();
         String userId = user.getId();
         String argument = args[0];
@@ -69,10 +70,12 @@ public class StrawpollCommand extends Command {
 
             case "create": {
                 if (creating.containsKey(userId)) {
-                    request.reply("You are already in the process of creating a poll! To exit this, say \"exit\".");
+                    request.reply("You are already in the process of creating a poll! To exit this, say \"exit\". " +
+                            "If you are not in the channel you created it in, please navigate to that channel and " +
+                            "say \"exit\" in there.");
                     return;
                 }
-                StrawpollBuilder builder = new StrawpollBuilder();
+                StrawpollBuilder builder = new StrawpollBuilder(channel);
                 creating.put(userId, builder);
                 request.reply("Created a new poll. You are now in the poll builder. " +
                         "Say \"exit\" to cancel the poll creation at any time." +
@@ -96,6 +99,7 @@ public class StrawpollCommand extends Command {
             return;
         }
         StrawpollBuilder builder = creating.get(userId);
+        if (!builder.getChannel().getId().equals(channel.getId())) return;
         if (content.equalsIgnoreCase("exit")) {
             creating.remove(userId);
             channel.sendChatMessage("Exited the poll creation! Create another one any time with 'strawpoll create'.");
@@ -287,7 +291,10 @@ public class StrawpollCommand extends Command {
 
     private SetupStage setupStage;
 
-    StrawpollBuilder() {
+    private final Channel channel;
+
+    StrawpollBuilder(Channel channel) {
+        this.channel = channel;
         this.setupStage = SetupStage.TITLE;
     }
 
@@ -324,6 +331,10 @@ public class StrawpollCommand extends Command {
 
     public SetupStage getSetupStage() {
         return setupStage;
+    }
+
+    public Channel getChannel() {
+        return channel;
     }
 
     public enum SetupStage {
